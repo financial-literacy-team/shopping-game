@@ -1,4 +1,4 @@
-import { defineComponent as F, ref as D, computed as v, watch as G, onUnmounted as J, openBlock as o, createBlock as K, Teleport as P, createVNode as Q, Transition as R, withCtx as W, createElementBlock as n, withModifiers as X, createElementVNode as t, normalizeClass as k, toDisplayString as r, createCommentVNode as h, Fragment as $, renderList as M } from "vue";
+import { defineComponent as F, ref as D, computed as h, watch as G, onUnmounted as J, openBlock as o, createBlock as K, Teleport as P, createVNode as Q, Transition as R, withCtx as W, createElementBlock as n, withModifiers as X, createElementVNode as t, normalizeClass as k, toDisplayString as c, createCommentVNode as g, Fragment as $, renderList as M } from "vue";
 const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }, ee = { class: "shop-timer-row" }, se = {
   key: 0,
   class: "shop-closed-note"
@@ -33,16 +33,16 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
   },
   emits: ["checkout", "close"],
   setup(d, { emit: y }) {
-    const p = d, C = y, l = D({}), m = D(15), g = D(!1);
+    const m = d, C = y, l = D({}), v = D(15), f = D(!1);
     let u = null;
-    const i = v(() => m.value <= 0), f = v(() => p.catalog.filter((e) => (l.value[e.id] ?? 0) > 0).map((e) => {
+    const i = h(() => v.value <= 0), _ = h(() => m.catalog.filter((e) => (l.value[e.id] ?? 0) > 0).map((e) => {
       const s = l.value[e.id] ?? 0;
       return {
         item: e,
         qty: s,
         subtotal: s * e.price
       };
-    })), b = v(() => f.value.reduce((e, s) => e + s.subtotal, 0)), T = v(() => b.value > 0), I = v(() => p.balance >= b.value), x = v(() => T.value && I.value), w = v(() => T.value ? I.value ? "" : "Недостатньо коштів для оплати кошика." : "Додай хоча б один товар у кошик."), O = (e) => {
+    })), b = h(() => _.value.reduce((e, s) => e + s.subtotal, 0)), T = h(() => b.value > 0), I = h(() => m.balance >= b.value), x = h(() => T.value && I.value), w = h(() => T.value ? I.value ? "" : "Недостатньо коштів для оплати кошика." : "Додай хоча б один товар у кошик."), O = (e) => {
       i.value || (l.value[e.id] = (l.value[e.id] ?? 0) + 1);
     }, S = (e) => {
       i.value || (l.value[e.id] = (l.value[e.id] ?? 0) + 1);
@@ -54,45 +54,46 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
       i.value || delete l.value[e.id];
     }, V = () => {
       if (!x.value) return;
-      const e = f.value.map((s) => ({
+      const e = _.value.map((s) => ({
         id: s.item.id,
         qty: s.qty
       }));
       C("checkout", { total: b.value, items: e });
     }, A = () => {
-      u && clearInterval(u), m.value = 15, u = setInterval(() => {
-        if (m.value <= 1) {
-          m.value = 0, u && clearInterval(u), u = null;
+      u && clearInterval(u), v.value = 15, u = setInterval(() => {
+        if (v.value <= 1) {
+          v.value = 0, u && clearInterval(u), u = null;
           return;
         }
-        m.value -= 1;
+        v.value -= 1;
       }, 1e3);
     }, q = () => {
       u && (clearInterval(u), u = null);
     }, E = (e, s) => {
-      var a, c, _;
-      i.value || ((a = e.dataTransfer) == null || a.setData("application/x-shop-item", s.id), (c = e.dataTransfer) == null || c.setData("text/plain", s.id), e.target instanceof HTMLElement && ((_ = e.dataTransfer) == null || _.setDragImage(e.target, 20, 20)));
+      var a, r, p;
+      i.value || ((a = e.dataTransfer) == null || a.setData("application/x-shop-item", s.id), (r = e.dataTransfer) == null || r.setData("text/plain", s.id), e.target instanceof HTMLElement && ((p = e.dataTransfer) == null || p.setDragImage(e.target, 20, 20)));
     }, N = (e) => {
-      i.value || (e.preventDefault(), g.value = !0);
+      i.value || (e.preventDefault(), f.value = !0);
     }, U = () => {
-      g.value = !1;
+      f.value = !1;
     }, j = (e) => {
-      var c, _;
-      if (e.preventDefault(), g.value = !1, i.value) return;
-      const s = ((c = e.dataTransfer) == null ? void 0 : c.getData("application/x-shop-item")) || ((_ = e.dataTransfer) == null ? void 0 : _.getData("text/plain"));
+      var r, p;
+      if (e.preventDefault(), f.value = !1, i.value) return;
+      const s = ((r = e.dataTransfer) == null ? void 0 : r.getData("application/x-shop-item")) || ((p = e.dataTransfer) == null ? void 0 : p.getData("text/plain"));
       if (!s) return;
-      const a = p.catalog.find((z) => z.id === s);
+      const a = m.catalog.find((z) => z.id === s);
       a && O(a);
     }, H = (e) => {
+      var r, p;
       const s = e.trim();
       if (!s) return "•";
       const a = s.split(" ");
-      return a.length === 1 ? a[0].slice(0, 2).toUpperCase() : `${a[0].charAt(0)}${a[1].charAt(0)}`.toUpperCase();
+      return a.length === 1 ? (a[0] ?? "").slice(0, 2).toUpperCase() : `${((r = a[0]) == null ? void 0 : r.charAt(0)) ?? ""}${((p = a[1]) == null ? void 0 : p.charAt(0)) ?? ""}`.toUpperCase();
     };
     return G(
-      () => p.isOpen,
+      () => m.isOpen,
       (e) => {
-        e ? (l.value = {}, g.value = !1, A()) : q();
+        e ? (l.value = {}, f.value = !1, A()) : q();
       },
       { immediate: !0 }
     ), J(() => {
@@ -112,10 +113,10 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
                 t("div", ee, [
                   s[1] || (s[1] = t("span", { class: "shop-timer-label" }, "До закриття магазину", -1)),
                   t("span", {
-                    class: k(["shop-timer-value", { "is-urgent": m.value <= 5 }])
-                  }, r(m.value) + " с", 3)
+                    class: k(["shop-timer-value", { "is-urgent": v.value <= 5 }])
+                  }, c(v.value) + " с", 3)
                 ]),
-                i.value ? (o(), n("p", se, " Магазин зачинено — можна лише оплатити кошик. ")) : h("", !0)
+                i.value ? (o(), n("p", se, " Магазин зачинено — можна лише оплатити кошик. ")) : g("", !0)
               ]),
               t("div", te, [
                 t("section", {
@@ -128,7 +129,7 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
                       key: a.id,
                       class: k(["shop-item-card", { "is-disabled": i.value }]),
                       draggable: !i.value,
-                      onDragstart: (c) => E(c, a)
+                      onDragstart: (r) => E(r, a)
                     }, [
                       t("div", ie, [
                         a.image ? (o(), n("img", {
@@ -136,64 +137,64 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
                           src: a.image,
                           alt: a.name,
                           class: "shop-item-icon-img"
-                        }, null, 8, ne)) : (o(), n("span", le, r(H(a.name)), 1))
+                        }, null, 8, ne)) : (o(), n("span", le, c(H(a.name)), 1))
                       ]),
                       t("div", re, [
-                        t("div", ce, r(a.name), 1),
-                        a.description ? (o(), n("div", de, r(a.description), 1)) : h("", !0)
+                        t("div", ce, c(a.name), 1),
+                        a.description ? (o(), n("div", de, c(a.description), 1)) : g("", !0)
                       ]),
                       t("div", ue, [
-                        t("span", pe, r(a.price) + " грн", 1)
+                        t("span", pe, c(a.price) + " грн", 1)
                       ])
                     ], 42, oe))), 128))
                   ])
                 ], 2),
                 t("section", {
-                  class: k(["shop-cart", { "is-dragover": g.value }]),
+                  class: k(["shop-cart", { "is-dragover": f.value }]),
                   onDragover: N,
                   onDragleave: U,
                   onDrop: j
                 }, [
                   s[8] || (s[8] = t("h3", { class: "shop-section-title" }, "Кошик", -1)),
-                  f.value.length === 0 ? (o(), n("div", me, " Кошик порожній. Додай товари. ")) : h("", !0),
-                  f.value.length === 0 ? (o(), n("div", ve, " Перетягни товари сюди ")) : (o(), n("div", he, [
-                    (o(!0), n($, null, M(f.value, (a) => (o(), n("div", {
+                  _.value.length === 0 ? (o(), n("div", me, " Кошик порожній. Додай товари. ")) : g("", !0),
+                  _.value.length === 0 ? (o(), n("div", ve, " Перетягни товари сюди ")) : (o(), n("div", he, [
+                    (o(!0), n($, null, M(_.value, (a) => (o(), n("div", {
                       key: a.item.id,
                       class: "shop-cart-item"
                     }, [
-                      t("div", ge, r(a.item.name), 1),
+                      t("div", ge, c(a.item.name), 1),
                       t("div", fe, [
                         t("button", {
                           class: "shop-qty-btn",
                           disabled: i.value,
-                          onClick: (c) => B(a.item)
+                          onClick: (r) => B(a.item)
                         }, " - ", 8, _e),
-                        t("span", be, r(a.qty), 1),
+                        t("span", be, c(a.qty), 1),
                         t("button", {
                           class: "shop-qty-btn",
                           disabled: i.value,
-                          onClick: (c) => S(a.item)
+                          onClick: (r) => S(a.item)
                         }, " + ", 8, ke),
                         t("button", {
                           class: "shop-remove-btn",
                           disabled: i.value,
-                          onClick: (c) => L(a.item)
+                          onClick: (r) => L(a.item)
                         }, " Прибрати ", 8, ye)
                       ]),
-                      t("div", Ce, r(a.subtotal) + " грн", 1)
+                      t("div", Ce, c(a.subtotal) + " грн", 1)
                     ]))), 128))
                   ])),
                   t("div", De, [
                     t("div", Te, [
                       s[6] || (s[6] = t("span", null, "Разом:", -1)),
-                      t("strong", null, r(b.value) + " грн", 1)
+                      t("strong", null, c(b.value) + " грн", 1)
                     ]),
                     t("div", Ie, [
                       s[7] || (s[7] = t("span", null, "Баланс:", -1)),
-                      t("strong", null, r(d.balance) + " грн", 1)
+                      t("strong", null, c(d.balance) + " грн", 1)
                     ]),
-                    w.value ? (o(), n("div", xe, r(w.value), 1)) : h("", !0),
-                    d.errorMessage ? (o(), n("div", we, r(d.errorMessage), 1)) : h("", !0)
+                    w.value ? (o(), n("div", xe, c(w.value), 1)) : g("", !0),
+                    d.errorMessage ? (o(), n("div", we, c(d.errorMessage), 1)) : g("", !0)
                   ]),
                   t("button", {
                     class: "shop-checkout-btn",
@@ -203,18 +204,18 @@ const Y = { class: "shop-minigame-card" }, Z = { class: "shop-minigame-header" }
                 ], 34)
               ])
             ])
-          ])) : h("", !0)
+          ])) : g("", !0)
         ]),
         _: 1
       })
     ]));
   }
 }), Me = (d, y) => {
-  const p = d.__vccOpts || d;
+  const m = d.__vccOpts || d;
   for (const [C, l] of y)
-    p[C] = l;
-  return p;
-}, Se = /* @__PURE__ */ Me($e, [["__scopeId", "data-v-bfea6bb1"]]), Be = [
+    m[C] = l;
+  return m;
+}, Se = /* @__PURE__ */ Me($e, [["__scopeId", "data-v-45b9f960"]]), Be = [
   {
     id: "bread",
     name: "Хліб",

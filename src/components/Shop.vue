@@ -292,8 +292,8 @@ const getInitials = (name: string) => {
   const trimmed = name.trim();
   if (!trimmed) return "•";
   const parts = trimmed.split(" ");
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+  if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
+  return `${parts[0]?.charAt(0) ?? ""}${parts[1]?.charAt(0) ?? ""}`.toUpperCase();
 };
 
 watch(
