@@ -1,142 +1,269 @@
+
 <template>
   <Teleport to="body">
     <Transition name="shop-fade">
-      <div v-if="isOpen" class="shop-minigame-overlay" @click.self="$emit('close')">
+      <div
+        v-if="isOpen"
+        class="shop-minigame-overlay"
+        @click.self="emit('close')"
+      >
         <div class="shop-minigame-card">
           <header class="shop-minigame-header">
             <h2 class="shop-minigame-title">Міні-гра магазину</h2>
             <p class="shop-minigame-subtitle">
-              Магазин зачиняється — маєш 15 секунд, щоб наповнити кошик.
-            </p>
-            <div class="shop-timer-row">
-              <span class="shop-timer-label">До закриття магазину</span>
-              <span
-                class="shop-timer-value"
-                :class="{ 'is-urgent': timeLeft <= 5 }"
-                >{{ timeLeft }} с</span
-              >
-            </div>
-            <p v-if="isShopClosed" class="shop-closed-note">
-              Магазин зачинено — можна лише оплатити кошик.
+              {{
+                selectedDifficulty
+                  ? "Збери кошик у межах свого бюджету."
+                  : "Обери рівень складності, щоб почати покупки."
+              }}
             </p>
           </header>
 
-          <div class="shop-minigame-body">
-            <section
-              class="shop-catalog"
-              :class="{ 'is-closed': isShopClosed }"
+          <!-- Difficulty selection -->
+          <section
+            v-if="!selectedDifficulty"
+            class="shop-difficulty-picker"
+          >
+            <h3 class="shop-section-title">Обери складність</h3>
+
+            <button
+              v-for="option in shopDifficulties"
+              :key="option.id"
+              type="button"
+              class="shop-difficulty-option"
+              :class="'difficulty-' + option.id"
+              @click="selectDifficulty(option)"
             >
-              <h3 class="shop-section-title">Каталог</h3>
-              <div class="shop-drag-hint">Перетягни товари у кошик</div>
-              <div class="shop-item-grid">
-                <article
-                  v-for="item in catalog"
-                  :key="item.id"
-                  class="shop-item-card"
-                  :class="{ 'is-disabled': isShopClosed }"
-                  :draggable="!isShopClosed"
-                  @dragstart="handleDragStart($event, item)"
-                >
-                  <div class="shop-item-icon">
-                    <img
-                      v-if="item.image"
-                      :src="item.image"
-                      :alt="item.name"
-                      class="shop-item-icon-img"
-                    />
-                    <span v-else class="shop-item-icon-text">{{
-                      getInitials(item.name)
-                    }}</span>
-                  </div>
-                  <div class="shop-item-info">
-                    <div class="shop-item-name">{{ item.name }}</div>
-                    <div v-if="item.description" class="shop-item-desc">
-                      {{ item.description }}
-                    </div>
-                  </div>
-                  <div class="shop-item-meta">
-                    <span class="shop-item-price">{{ item.price }} грн</span>
-                  </div>
-                </article>
-              </div>
-            </section>
+              <span class="shop-difficulty-title">
+                {{ option.title }}
+              </span>
 
-            <section
-              class="shop-cart"
-              :class="{ 'is-dragover': isDragOver }"
-              @dragover="handleDragOver"
-              @dragleave="handleDragLeave"
-              @drop="handleDrop"
-            >
-              <h3 class="shop-section-title">Кошик</h3>
-              <div v-if="cartItems.length === 0" class="shop-empty">
-                Кошик порожній. Додай товари.
-              </div>
-              <div v-if="cartItems.length === 0" class="shop-drop-hint">
-                Перетягни товари сюди
-              </div>
+              <span class="shop-difficulty-description">
+                {{ option.description }}
+              </span>
 
-              <div v-else class="shop-cart-list">
-                <div
-                  v-for="entry in cartItems"
-                  :key="entry.item.id"
-                  class="shop-cart-item"
-                >
-                  <div class="shop-cart-name">{{ entry.item.name }}</div>
-                  <div class="shop-cart-controls">
-                    <button
-                      class="shop-qty-btn"
-                      :disabled="isShopClosed"
-                      @click="decrement(entry.item)"
-                    >
-                      -
-                    </button>
-                    <span class="shop-qty-value">{{ entry.qty }}</span>
-                    <button
-                      class="shop-qty-btn"
-                      :disabled="isShopClosed"
-                      @click="increment(entry.item)"
-                    >
-                      +
-                    </button>
-                    <button
-                      class="shop-remove-btn"
-                      :disabled="isShopClosed"
-                      @click="remove(entry.item)"
-                    >
-                      Прибрати
-                    </button>
-                  </div>
-                  <div class="shop-cart-subtotal">{{ entry.subtotal }} грн</div>
-                </div>
-              </div>
+              <span class="shop-difficulty-budget">
+                Бюджет: {{ option.budget }} UAH
+              </span>
 
-              <div class="shop-cart-summary">
-                <div class="shop-summary-row">
-                  <span>Разом:</span>
-                  <strong>{{ total }} грн</strong>
-                </div>
-                <div class="shop-summary-row">
-                  <span>Баланс:</span>
-                  <strong>{{ balance }} грн</strong>
-                </div>
-                <div v-if="checkoutHint" class="shop-warning">
-                  {{ checkoutHint }}
-                </div>
-                <div v-if="errorMessage" class="shop-warning">
-                  {{ errorMessage }}
-                </div>
+              <span class="shop-difficulty-timer">
+                {{
+                  option.timeLimit !== null
+                    ? `Час: ${option.timeLimit} с`
+                    : "Без обмеження часу"
+                }}
+              </span>
+            </button>
+          </section>
+
+          <!-- Main shopping activity -->
+          <template v-else>
+            <div class="shop-game-toolbar">
+              <div class="shop-current-difficulty">
+                <strong>
+                  Рівень: {{ selectedDifficulty.title }}
+                </strong>
+                <span>
+                  Бюджет: {{ selectedDifficulty.budget }} UAH
+                </span>
               </div>
 
               <button
-                class="shop-checkout-btn"
-                :disabled="!canCheckout"
-                @click="checkout"
+                type="button"
+                class="shop-change-difficulty"
+                @click="backToDifficulty"
               >
-                Оплатити
+                Змінити складність
               </button>
-            </section>
-          </div>
+            </div>
+
+            <!-- Timer exists only for Hard -->
+            <div
+              v-if="timeLeft !== null"
+              class="shop-timer-row"
+            >
+              <span class="shop-timer-label">
+                До закриття магазину
+              </span>
+
+              <span
+                class="shop-timer-value"
+                :class="{ 'is-urgent': timeLeft <= 5 }"
+              >
+                {{ timeLeft }} с
+              </span>
+            </div>
+
+            <p
+              v-if="isShopClosed"
+              class="shop-closed-note"
+            >
+              Час вичерпано — можна оплатити вже зібраний кошик.
+            </p>
+
+            <div class="shop-minigame-body">
+              <section
+                class="shop-catalog"
+                :class="{ 'is-closed': isShopClosed }"
+              >
+                <h3 class="shop-section-title">Каталог</h3>
+
+                <div class="shop-drag-hint">
+                  Перетягни товари у кошик
+                </div>
+
+                <div class="shop-item-grid">
+                  <article
+                    v-for="item in shopCatalog"
+                    :key="item.id"
+                    class="shop-item-card"
+                    :class="{ 'is-disabled': isShopClosed }"
+                    :draggable="!isShopClosed"
+                    @dragstart="handleDragStart($event, item)"
+                  >
+                    <div class="shop-item-icon">
+                      <img
+                        v-if="item.image"
+                        :src="item.image"
+                        :alt="item.name"
+                        class="shop-item-icon-img"
+                      />
+
+                      <span
+                        v-else
+                        class="shop-item-icon-text"
+                      >
+                        {{ getInitials(item.name) }}
+                      </span>
+                    </div>
+
+                    <div class="shop-item-info">
+                      <div class="shop-item-name">
+                        {{ item.name }}
+                      </div>
+
+                      <div
+                        v-if="item.description"
+                        class="shop-item-desc"
+                      >
+                        {{ item.description }}
+                      </div>
+                    </div>
+
+                    <div class="shop-item-meta">
+                      <span class="shop-item-price">
+                        {{ item.price }} UAH
+                      </span>
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <section
+                class="shop-cart"
+                :class="{ 'is-dragover': isDragOver }"
+                @dragover="handleDragOver"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop"
+              >
+                <h3 class="shop-section-title">Кошик</h3>
+
+                <div
+                  v-if="cartItems.length === 0"
+                  class="shop-empty"
+                >
+                  Кошик порожній. Додай товари.
+                </div>
+
+                <div
+                  v-if="cartItems.length === 0"
+                  class="shop-drop-hint"
+                >
+                  Перетягни товари сюди
+                </div>
+
+                <div
+                  v-else
+                  class="shop-cart-list"
+                >
+                  <div
+                    v-for="entry in cartItems"
+                    :key="entry.item.id"
+                    class="shop-cart-item"
+                  >
+                    <div class="shop-cart-name">
+                      {{ entry.item.name }}
+                    </div>
+
+                    <div class="shop-cart-controls">
+                      <button
+                        type="button"
+                        class="shop-qty-btn"
+                        :disabled="isShopClosed"
+                        @click="decrement(entry.item)"
+                      >
+                        -
+                      </button>
+
+                      <span class="shop-qty-value">
+                        {{ entry.qty }}
+                      </span>
+
+                      <button
+                        type="button"
+                        class="shop-qty-btn"
+                        :disabled="isShopClosed"
+                        @click="increment(entry.item)"
+                      >
+                        +
+                      </button>
+
+                      <button
+                        type="button"
+                        class="shop-remove-btn"
+                        :disabled="isShopClosed"
+                        @click="remove(entry.item)"
+                      >
+                        Прибрати
+                      </button>
+                    </div>
+
+                    <div class="shop-cart-subtotal">
+                      {{ entry.subtotal }} UAH
+                    </div>
+                  </div>
+                </div>
+
+                <div class="shop-cart-summary">
+                  <div class="shop-summary-row">
+                    <span>Разом:</span>
+                    <strong>{{ total }} UAH</strong>
+                  </div>
+
+                  <div class="shop-summary-row">
+                    <span>Залишок бюджету:</span>
+                    <strong>{{ remainingBudget }} UAH</strong>
+                  </div>
+
+                  <div
+                    v-if="checkoutHint"
+                    class="shop-warning"
+                  >
+                    {{ checkoutHint }}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="shop-checkout-btn"
+                  :disabled="!canCheckout"
+                  @click="checkout"
+                >
+                  Завершити покупки
+                </button>
+              </section>
+            </div>
+          </template>
         </div>
       </div>
     </Transition>
@@ -144,76 +271,178 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from "vue";
+import {
+  computed,
+  onUnmounted,
+  ref,
+  watch,
+} from "vue";
+
+import { shopCatalog } from "../shopCatalog";
 import type { ShopItem } from "../shopCatalog";
+
+import {
+  SHOP_CURRENCY,
+  shopDifficulties,
+} from "../shopScenarios";
+
+import type {
+  ShopDifficultyOption,
+  ShopGameResult,
+} from "../shopScenarios";
 
 const props = withDefaults(
   defineProps<{
     isOpen: boolean;
-    catalog: ShopItem[];
-    balance: number;
-    errorMessage?: string | null;
   }>(),
   {
     isOpen: false,
-    catalog: () => [],
-    balance: 0,
-    errorMessage: null,
   }
 );
 
 const emit = defineEmits<{
-  (e: "checkout", payload: { total: number; items: Array<{ id: string; qty: number }> }): void;
-  (e: "close"): void;
+  (event: "completed", result: ShopGameResult): void;
+  (event: "close"): void;
 }>();
 
+// Game state
+const selectedDifficulty = ref<ShopDifficultyOption | null>(null);
 const cart = ref<Record<string, number>>({});
-const timeLeft = ref(15);
+const timeLeft = ref<number | null>(null);
 const isDragOver = ref(false);
+
 let timerId: ReturnType<typeof setInterval> | null = null;
 
-const isShopClosed = computed(() => timeLeft.value <= 0);
+// Timer is considered expired only when a timer exists.
+// Easy and Medium therefore never become closed.
+const isShopClosed = computed(
+  () => timeLeft.value !== null && timeLeft.value <= 0
+);
 
-const cartItems = computed(() => {
-  return props.catalog
+// Cart calculations
+const cartItems = computed(() =>
+  shopCatalog
     .filter((item: ShopItem) => (cart.value[item.id] ?? 0) > 0)
     .map((item: ShopItem) => {
       const qty = cart.value[item.id] ?? 0;
+
       return {
         item,
         qty,
         subtotal: qty * item.price,
       };
-    });
-});
+    })
+);
 
-const total = computed(() => {
-  return cartItems.value.reduce((sum: number, entry: { subtotal: number }) => sum + entry.subtotal, 0);
-});
+const total = computed(() =>
+  cartItems.value.reduce(
+    (sum, entry) => sum + entry.subtotal,
+    0
+  )
+);
+
+const remainingBudget = computed(
+  () => (selectedDifficulty.value?.budget ?? 0) - total.value
+);
 
 const hasItems = computed(() => total.value > 0);
-const isAffordable = computed(() => props.balance >= total.value);
-const canCheckout = computed(() => hasItems.value && isAffordable.value);
+
+const isAffordable = computed(
+  () => remainingBudget.value >= 0
+);
+
+const canCheckout = computed(
+  () =>
+    selectedDifficulty.value !== null &&
+    hasItems.value &&
+    isAffordable.value
+);
 
 const checkoutHint = computed(() => {
-  if (!hasItems.value) return "Додай хоча б один товар у кошик.";
-  if (!isAffordable.value) return "Недостатньо коштів для оплати кошика.";
+  if (!hasItems.value) {
+    return "Додай хоча б один товар у кошик.";
+  }
+
+  if (!isAffordable.value) {
+    return "Недостатньо коштів у бюджеті. Прибери частину товарів.";
+  }
+
   return "";
 });
 
+// Timer management
+const stopTimer = () => {
+  if (timerId !== null) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+};
+
+const startTimer = (seconds: number) => {
+  stopTimer();
+
+  timeLeft.value = seconds;
+
+  timerId = setInterval(() => {
+    if (timeLeft.value === null) return;
+
+    if (timeLeft.value <= 1) {
+      timeLeft.value = 0;
+      stopTimer();
+      return;
+    }
+
+    timeLeft.value -= 1;
+  }, 1000);
+};
+
+// Reset the activity when it is opened again
+const resetGame = () => {
+  stopTimer();
+
+  selectedDifficulty.value = null;
+  cart.value = {};
+  timeLeft.value = null;
+  isDragOver.value = false;
+};
+
+// Difficulty selection
+const selectDifficulty = (
+  option: ShopDifficultyOption
+) => {
+  selectedDifficulty.value = option;
+  cart.value = {};
+
+  if (option.timeLimit !== null) {
+    startTimer(option.timeLimit);
+  } else {
+    stopTimer();
+    timeLeft.value = null;
+  }
+};
+
+const backToDifficulty = () => {
+  resetGame();
+};
+
+// Cart operations
 const addToCart = (item: ShopItem) => {
   if (isShopClosed.value) return;
-  cart.value[item.id] = (cart.value[item.id] ?? 0) + 1;
+
+  cart.value[item.id] =
+    (cart.value[item.id] ?? 0) + 1;
 };
 
 const increment = (item: ShopItem) => {
-  if (isShopClosed.value) return;
-  cart.value[item.id] = (cart.value[item.id] ?? 0) + 1;
+  addToCart(item);
 };
 
 const decrement = (item: ShopItem) => {
   if (isShopClosed.value) return;
-  const nextValue = (cart.value[item.id] ?? 0) - 1;
+
+  const nextValue =
+    (cart.value[item.id] ?? 0) - 1;
+
   if (nextValue <= 0) {
     delete cart.value[item.id];
   } else {
@@ -223,50 +452,61 @@ const decrement = (item: ShopItem) => {
 
 const remove = (item: ShopItem) => {
   if (isShopClosed.value) return;
+
   delete cart.value[item.id];
 };
 
+// Emit the result to the host application.
+// This component does not update the host's balance or state.
 const checkout = () => {
-  if (!canCheckout.value) return;
-  const items = cartItems.value.map((entry: { item: ShopItem; qty: number }) => ({
-    id: entry.item.id,
-    qty: entry.qty,
-  }));
-  emit("checkout", { total: total.value, items });
-};
-
-const startTimer = () => {
-  if (timerId) clearInterval(timerId);
-  timeLeft.value = 15;
-  timerId = setInterval(() => {
-    if (timeLeft.value <= 1) {
-      timeLeft.value = 0;
-      if (timerId) clearInterval(timerId);
-      timerId = null;
-      return;
-    }
-    timeLeft.value -= 1;
-  }, 1000);
-};
-
-const stopTimer = () => {
-  if (timerId) {
-    clearInterval(timerId);
-    timerId = null;
+  if (!canCheckout.value || !selectedDifficulty.value) {
+    return;
   }
+
+  const result: ShopGameResult = {
+    difficulty: selectedDifficulty.value.id,
+    spent: total.value,
+    remainingBudget: remainingBudget.value,
+    currency: SHOP_CURRENCY,
+    items: cartItems.value.map((entry) => ({
+      id: entry.item.id,
+      qty: entry.qty,
+    })),
+    completed: true,
+  };
+
+  emit("completed", result);
 };
 
-const handleDragStart = (event: DragEvent, item: ShopItem) => {
+// Drag and drop
+const handleDragStart = (
+  event: DragEvent,
+  item: ShopItem
+) => {
   if (isShopClosed.value) return;
-  event.dataTransfer?.setData("application/x-shop-item", item.id);
-  event.dataTransfer?.setData("text/plain", item.id);
+
+  event.dataTransfer?.setData(
+    "application/x-shop-item",
+    item.id
+  );
+
+  event.dataTransfer?.setData(
+    "text/plain",
+    item.id
+  );
+
   if (event.target instanceof HTMLElement) {
-    event.dataTransfer?.setDragImage(event.target, 20, 20);
+    event.dataTransfer?.setDragImage(
+      event.target,
+      20,
+      20
+    );
   }
 };
 
 const handleDragOver = (event: DragEvent) => {
   if (isShopClosed.value) return;
+
   event.preventDefault();
   isDragOver.value = true;
 };
@@ -278,31 +518,50 @@ const handleDragLeave = () => {
 const handleDrop = (event: DragEvent) => {
   event.preventDefault();
   isDragOver.value = false;
+
   if (isShopClosed.value) return;
+
   const id =
-    event.dataTransfer?.getData("application/x-shop-item") ||
+    event.dataTransfer?.getData(
+      "application/x-shop-item"
+    ) ||
     event.dataTransfer?.getData("text/plain");
+
   if (!id) return;
-  const item = props.catalog.find((entry: ShopItem) => entry.id === id);
-  if (!item) return;
-  addToCart(item);
+
+  const item = shopCatalog.find(
+    (entry: ShopItem) => entry.id === id
+  );
+
+  if (item) {
+    addToCart(item);
+  }
 };
 
+// Fallback icon text
 const getInitials = (name: string) => {
   const trimmed = name.trim();
+
   if (!trimmed) return "•";
+
   const parts = trimmed.split(" ");
-  if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
-  return `${parts[0]?.charAt(0) ?? ""}${parts[1]?.charAt(0) ?? ""}`.toUpperCase();
+
+  if (parts.length === 1) {
+    return (parts[0] ?? "").slice(0, 2).toUpperCase();
+  }
+
+  return (
+    (parts[0]?.charAt(0) ?? "") +
+    (parts[1]?.charAt(0) ?? "")
+  ).toUpperCase();
 };
 
+// Lifecycle
 watch(
   () => props.isOpen,
-  (isOpen: boolean) => {
+  (isOpen) => {
     if (isOpen) {
-      cart.value = {};
-      isDragOver.value = false;
-      startTimer();
+      resetGame();
     } else {
       stopTimer();
     }
@@ -362,6 +621,78 @@ onUnmounted(() => {
   color: #6c4b35;
 }
 
+/* Difficulty selection */
+.shop-difficulty-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+}
+
+.shop-difficulty-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5vh;
+  padding: 1.6vh 1.4vw;
+  border: 0.25vh solid #d9c3a1;
+  border-radius: 1.4vh;
+  background: #fffdf7;
+  color: #4a2f1c;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shop-difficulty-option:hover {
+  border-color: #8a3177;
+  transform: translateY(-0.1vh);
+}
+
+.shop-difficulty-title {
+  font-size: 2.3vh;
+  font-weight: 900;
+}
+
+.shop-difficulty-description {
+  font-size: 1.8vh;
+}
+
+.shop-difficulty-budget {
+  font-size: 1.9vh;
+  font-weight: 900;
+}
+
+.shop-difficulty-timer {
+  font-size: 1.7vh;
+  font-weight: 700;
+  color: #8a3177;
+}
+
+.shop-game-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1vh;
+}
+
+.shop-current-difficulty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vh;
+  color: #4a2f1c;
+  font-size: 1.8vh;
+}
+
+.shop-change-difficulty {
+  border: 0.2vh solid #caa677;
+  border-radius: 0.8vh;
+  padding: 0.7vh 1vw;
+  background: #fffdf7;
+  color: #6b4a30;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Timer */
 .shop-timer-row {
   display: flex;
   align-items: center;
@@ -391,6 +722,7 @@ onUnmounted(() => {
   color: #b12f2f;
 }
 
+/* Main layout */
 .shop-minigame-body {
   display: grid;
   grid-template-columns: 1fr;
@@ -493,6 +825,7 @@ onUnmounted(() => {
   color: #8a3177;
 }
 
+/* Cart */
 .shop-cart {
   background: #fff9ef;
   border-radius: 1.8vh;
@@ -632,6 +965,7 @@ onUnmounted(() => {
   transform: none;
 }
 
+/* Transitions */
 .shop-fade-enter-active,
 .shop-fade-leave-active {
   transition: opacity 0.2s ease;

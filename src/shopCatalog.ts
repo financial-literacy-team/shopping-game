@@ -7,7 +7,7 @@ export interface ShopItem {
   image?: string;
 }
 
-const shopCatalog: ShopItem[] = [
+export const shopCatalog: ShopItem[] = [
   {
     id: "bread",
     name: "Хліб",
