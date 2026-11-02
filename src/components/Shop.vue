@@ -109,7 +109,7 @@
                 <h3 class="shop-section-title">Каталог</h3>
 
                 <div class="shop-drag-hint">
-                  Перетягни товари у кошик
+                  Перетягни товари у кошик або натисни на них
                 </div>
 
                 <div class="shop-item-grid">
@@ -120,6 +120,7 @@
                     :class="{ 'is-disabled': isShopClosed }"
                     :draggable="!isShopClosed"
                     @dragstart="handleDragStart($event, item)"
+                    @click="addToCart(item)"
                   >
                     <div class="shop-item-icon">
                       <img
@@ -254,6 +255,16 @@
                 </div>
 
                 <button
+                  v-if="canLeaveEmpty"
+                  type="button"
+                  class="shop-checkout-btn"
+                  @click="leaveEmpty"
+                >
+                  Піти без покупок
+                </button>
+
+                <button
+                  v-else
                   type="button"
                   class="shop-checkout-btn"
                   :disabled="!canCheckout"
@@ -358,7 +369,17 @@ const canCheckout = computed(
     isAffordable.value
 );
 
+// Hard mode: once the timer runs out with an empty cart nothing can be bought,
+// so offer a way out instead of leaving the player stuck
+const canLeaveEmpty = computed(
+  () => isShopClosed.value && !hasItems.value
+);
+
 const checkoutHint = computed(() => {
+  if (canLeaveEmpty.value) {
+    return "Час вичерпано, а кошик порожній.";
+  }
+
   if (!hasItems.value) {
     return "Додай хоча б один товар у кошик.";
   }
@@ -478,6 +499,21 @@ const checkout = () => {
   emit("completed", result);
 };
 
+const leaveEmpty = () => {
+  if (!canLeaveEmpty.value || !selectedDifficulty.value) {
+    return;
+  }
+
+  emit("completed", {
+    difficulty: selectedDifficulty.value.id,
+    spent: 0,
+    remainingBudget: selectedDifficulty.value.budget,
+    currency: SHOP_CURRENCY,
+    items: [],
+    completed: false,
+  });
+};
+
 // Drag and drop
 const handleDragStart = (
   event: DragEvent,
@@ -582,7 +618,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 260;
+  z-index: 10001;
   pointer-events: auto;
 }
 
@@ -769,7 +805,9 @@ onUnmounted(() => {
   gap: 0.8vh 1vw;
   align-items: center;
   box-shadow: 0 0.4vh 0 rgba(0, 0, 0, 0.08);
-  cursor: grab;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .shop-item-card.is-disabled {
@@ -892,6 +930,8 @@ onUnmounted(() => {
 .shop-qty-btn {
   width: 3vh;
   height: 3vh;
+  min-width: 28px;
+  min-height: 28px;
   border-radius: 0.8vh;
   border: 0.2vh solid #6b4a30;
   background: #fff4dd;

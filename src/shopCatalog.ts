@@ -1,3 +1,15 @@
+// Imported (not "/src/assets/..." paths) so the images resolve inside the host game too
+import breadImg from "./assets/bread.webp";
+import cheeseImg from "./assets/cheese.webp";
+import chickenImg from "./assets/chicken.webp";
+import eggsImg from "./assets/eggs.webp";
+import fruitsImg from "./assets/fruits.webp";
+import juiceImg from "./assets/juice.webp";
+import milkImg from "./assets/milk.webp";
+import oilImg from "./assets/oil.webp";
+import pastaImg from "./assets/pasta.webp";
+import vegetablesImg from "./assets/vegetables.webp";
+
 export interface ShopItem {
   id: string;
   name: string;
@@ -14,7 +26,7 @@ export const shopCatalog: ShopItem[] = [
     price: 35,
     category: "base",
     description: "Свіжий батон на щодень.",
-    image: "/src/assets/bread.png",
+    image: breadImg,
   },
   {
     id: "milk",
@@ -22,7 +34,7 @@ export const shopCatalog: ShopItem[] = [
     price: 52,
     category: "dairy",
     description: "1 л, 2.5% жирності.",
-    image: "/src/assets/milk.png",
+    image: milkImg,
   },
   {
     id: "eggs",
@@ -30,7 +42,7 @@ export const shopCatalog: ShopItem[] = [
     price: 78,
     category: "base",
     description: "Десяток яєць.",
-    image: "/src/assets/eggs.png",
+    image: eggsImg,
   },
   {
     id: "cheese",
@@ -38,7 +50,7 @@ export const shopCatalog: ShopItem[] = [
     price: 120,
     category: "dairy",
     description: "Твердий сир 200 г.",
-    image: "/src/assets/cheese.png",
+    image: cheeseImg,
   },
   {
     id: "chicken",
@@ -46,7 +58,7 @@ export const shopCatalog: ShopItem[] = [
     price: 165,
     category: "meat",
     description: "Філе 500 г.",
-    image: "/src/assets/chicken.png",
+    image: chickenImg,
   },
   {
     id: "pasta",
@@ -54,7 +66,7 @@ export const shopCatalog: ShopItem[] = [
     price: 48,
     category: "base",
     description: "Спагеті 400 г.",
-    image: "/src/assets/pasta.png",
+    image: pastaImg,
   },
   {
     id: "vegetables",
@@ -62,7 +74,7 @@ export const shopCatalog: ShopItem[] = [
     price: 90,
     category: "produce",
     description: "Мікс сезонних овочів.",
-    image: "/src/assets/vegetables.png",
+    image: vegetablesImg,
   },
   {
     id: "fruit",
@@ -70,7 +82,7 @@ export const shopCatalog: ShopItem[] = [
     price: 110,
     category: "produce",
     description: "Кілограм яблук.",
-    image: "/src/assets/fruits.png",
+    image: fruitsImg,
   },
   {
     id: "oil",
@@ -78,7 +90,7 @@ export const shopCatalog: ShopItem[] = [
     price: 75,
     category: "base",
     description: "Соняшникова олія 0.9 л.",
-    image: "/src/assets/oil.png",
+    image: oilImg,
   },
   {
     id: "juice",
@@ -86,7 +98,7 @@ export const shopCatalog: ShopItem[] = [
     price: 65,
     category: "drinks",
     description: "Пакет 1 л.",
-    image: "/src/assets/juice.png",
+    image: juiceImg,
   },
 ];
 
